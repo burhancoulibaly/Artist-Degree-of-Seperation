@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>artist-closest-proximity</title>
+  <link rel='stylesheet' href='/bootstrap/css/bootstrap.css'>
+  <link rel='stylesheet' href='/css/home.css'>
+</head>
+<body>
+  <div id="main-content">
+    <form id="search">
+      <div>
+        <div class="form-group">
+          <label for="entity1">Artist One</label>
+          <input type="text" class="form-control" id="entity1" placeholder="Enter artist name" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label for="entity2">Artist Two</label>
+          <input type="text" class="form-control" id="entity2" placeholder="Enter artist name" autocomplete="off">
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+      </div>
+    </form>
+    <div id="results">
+      <div class="welcome-msg">
+        <h1>Welcome to Six Degrees of Music Artists Seperation</h1>
+
+        <div>
+          <p>This app uses Dijkstra's Algorithm to find the closest degree of seperation between artists, and the musicbrainz db for the data. It currently doesn't include music sample relationships, but I'm looking forward to adding this in the future.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type='text/javascript' src='jquery/dist/jquery.js'></script>
+  <script type='text/javascript' src='js/home.js'></script>
+  <script type='text/javascript' src='/js/Node.js'></script>
+  <script type='text/javascript' src='/js/Algorithms/Dijkstra.js'></script>
+  <script type='text/javascript' src='/js/Algorithms/FibonacciHeap.js'></script>
+  <script type='text/javascript' src='/js/Algorithms/FibonacciHeapNode.js'></script>
+</body>
+</html>
