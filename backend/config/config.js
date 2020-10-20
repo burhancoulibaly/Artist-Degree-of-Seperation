@@ -5,11 +5,11 @@ const dotenv = require('dotenv'),
 dotenv.config({ path: envFile })
 
 config = {
-    user: process.env.USER,
-    host: process.env.HOST,
+    user: process.env.DBUSER,
+    host: process.env.DBHOST,
     database: process.env.DATABASE,
-    password: process.env.PASSWORD,
-    port: process.env.PORT
+    password: process.env.DBPASSWORD,
+    port: process.env.DBPORT
 }
 
 module.exports = {
