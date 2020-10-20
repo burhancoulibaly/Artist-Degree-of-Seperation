@@ -29,11 +29,11 @@ app.use('/images', express.static(images));
 app.use(bodyParser.json());
 
 const pool = new Pool({
-  user: 'musicbrainz',
-  host: '127.0.0.1',
-  database: 'musicbrainz',
-  password: 'Burbur69',
-  port: 5432,
+  user: config.user,
+  host: config.host,
+  database: config.database,
+  password: config.password,
+  port: config.port,
 })
 
 server.listen(process.env.PORT || 3000);
