@@ -240,6 +240,126 @@ async function search(e){
         });
     });
 
+    Object.values(data.artistRelationships).forEach((value) => {
+        let artist1 = new Array();
+        let artist2 = new Array();
+
+        nodes.forEach((node) => {
+            if(node.getType() === "artist"){
+                if(node.getObject().artistId === value.entity0){
+                    // console.log("artist match 1")
+                    artist1.push(node);
+                }
+
+                if(node.getObject().artistId === value.entity1){
+                    // console.log("artist match 2")
+                    artist2.push(node);
+                }
+            }
+        })
+
+        if(artist1.length && artist2.length){
+            artist1.forEach((artist) => {
+                artist.addNeighbors(artist2);
+            })
+            
+            artist2.forEach((artist) => {
+                artist.addNeighbors(artist1);
+            })
+        }
+    })
+
+    Object.values(data.recordingRelationships).forEach((value) => {
+        let track1 = new Array();
+        let track2 = new Array();
+
+        nodes.forEach((node) => {
+            if(node.getType() === "track"){
+                if(node.getObject()["Recording ID"] === value.entity0){
+                    // console.log("track match 1")
+                    track1.push(node);
+                }
+
+                if(node.getObject()["Recording ID"] === value.entity1){
+                    // console.log("track match 2")
+                    track2.push(node);
+                }
+            }
+        })
+
+        if(track1.length && track2.length){
+            track1.forEach((track) => {
+                track.addNeighbors(track2);
+            })
+
+            track2.forEach((track) => {
+                track.addNeighbors(track1);
+            })
+        }
+    })
+
+    Object.values(data.artistLabelRelationships).forEach((value) => {
+        let artists = new Array();
+        let labels = new Array();
+
+        nodes.forEach((node) => {
+            if(node.getType() === "artist"){
+                if(node.getObject().artistId === value.entity0){
+                    // console.log("artist match 1")
+                    artists.push(node);
+                }
+            }
+        })
+
+        nodes.forEach((node) => {
+            if(node.getType() === "label"){
+                if(node.getObject()["Label ID"] === value.entity1){
+                    // console.log("label match 1")
+                    labels.push(node);
+                }
+            }
+        })
+
+        if(artists.length && labels.length){
+            artists.forEach((artist) => {
+                artist.addNeighbors(labels);
+            })
+            
+            labels.forEach((label) => {
+                label.addNeighbors(artists);
+            })
+        }
+    })
+
+    Object.values(data.labelRelationships).forEach((value) => {
+        let label1 = new Array();
+        let label2 = new Array();
+
+        nodes.forEach((node) => {
+            if(node.getType() === "label"){
+                if(node.getObject()["Label ID"] === value.entity0){
+                    // console.log("label match 1")
+                    label1.push(node);
+                }
+
+                if(node.getObject()["Label ID"] === value.entity1){
+                    // console.log("label match 2")
+                    label2.push(node);
+                }
+            }
+        })
+
+        if(label1.length && label2.length){
+            label1.forEach((label) => {
+                label.addNeighbors(label2);
+            })
+            
+            label1.forEach((label) => {
+                label.addNeighbors(label1);
+            })
+        }
+    })
+
     let releaseNodes = new Array();
     let trackNodes = new Array();
 
@@ -273,6 +393,15 @@ async function search(e){
     })
 
     console.log(nodes);
+
+    // Promise.all(nodes.map((node) => {
+    //     if(node.getType() === "track"){
+    //         if(node.getNeighbors().length < 2){
+    //             console.log(node)
+    //             console.log("Soem ting wong")
+    //         } 
+    //     }
+    // }))
 
     const path = Dijkstra(artist1, artist2, nodes);
 
