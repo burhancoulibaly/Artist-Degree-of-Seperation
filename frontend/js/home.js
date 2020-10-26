@@ -140,8 +140,17 @@ async function search(e){
 
     console.log(artist1, artist2);
 
-    const data = await getArtistsData([artist1, artist2]);
+    const startArtist = await getArtist(artist1);
+    const endArtist = await getArtist(artist2);
 
+    console.log(...Object.values(startArtist));
+    console.log(...Object.values(endArtist));
+    
+    console.time("Dijkstra");
+    const path = await Dijkstra(...Object.values(startArtist), ...Object.values(endArtist));
+    console.timeEnd("Dijkstra");
+
+    return;
     console.log(data);
 
     Object.values(data.artists).forEach((value) => {
@@ -403,7 +412,7 @@ async function search(e){
     //     }
     // }))
 
-    const path = Dijkstra(artist1, artist2, nodes);
+    // const path = Dijkstra(artist1, artist2, nodes);
 
     let resultNodesDiv = document.createElement("DIV")
     resultNodesDiv.setAttribute("class", "result-nodes");
@@ -527,7 +536,7 @@ function getArtistsSuggestions(text, url="/getArtistsSuggestions"){
     })
 }
 
-function getArtistsData(artists, url="/getArtistsData"){
+function getArtist(artist, url="/getArtist"){
     return new Promise((resolve, reject) => {
         let xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() { 
@@ -546,6 +555,8 @@ function getArtistsData(artists, url="/getArtistsData"){
         xhr.open("POST", url, true); // true for asynchronous 
         // set `Content-Type` header
         xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send(JSON.stringify({artists: artists}));
+        xhr.send(JSON.stringify({artist: artist}));
     })
 }
+
+

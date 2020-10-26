@@ -1,123 +1,97 @@
-function Dijkstra(artistId1, artistId2, nodes){
+const getNeighbors = (current, nodes, startNode) => {
+    return new Promise(async(resolve, reject) => {
+        try {
+            let data;
+            // console.log(current.getPoint())
+
+            if(startNode && current.getPoint().type === "artist"){
+                data = await getStartNodeNeighbors(current.getPoint());
+            }else{
+                data = await getArtistNeighbors(current.getPoint());
+            }
+
+            if(current.getPoint().type === "release"){
+                data = await getReleaseNeighbors(current.getPoint());
+            }
+
+            if(current.getPoint().type === "track"){
+                data = await getTrackNeighbors(current.getPoint());
+            }
+
+            if(current.getPoint().type === "label"){
+                data = await getLabelNeighbors(current.getPoint());
+            }
+            
+            // console.log(data);
+            const neighbors = new Array();
+
+            if(data.artists){
+                neighbors.push(...Object.values(data.artists));
+            }
+            if(data.releases){
+                neighbors.push(...Object.values(data.releases));
+            }
+            if(data.tracks){
+                neighbors.push(...Object.values(data.tracks));
+            }
+            if(data.labels){
+                neighbors.push(...Object.values(data.labels));
+            }
+            
+            resolve(neighbors);
+        } catch (error) {
+            reject(error);
+        }
+        
+    })
+}
+
+async function Dijkstra(artist1, artist2){
+    let currCameFromIndex = 0;
     const heap = new FibonacciHeap();
     const cameFrom = {};
-    const nodeArtists = {};
-    const nodeLabels = {};
-    const nodeReleases = {};
-    const nodeTracks = {};
+    const nodes = {
+        "artist": new Object(),
+        "label":  new Object(),
+        "release":  new Object(),
+        "track":  new Object()
+    }
 
-    nodes.forEach((node, index) => {
-        if(node.getType() === "artist" && node.getObject().artistId === artistId1){
-            nodeArtists[artistId1] = {dist: 0, node: null, index: index};
-            cameFrom[index] = null;
-        }
+    let currNode;
 
-        if(node.getType() !== "artist" ||  node.getType() === "artist" && node.getObject().artistId !== artistId1){
-            if(node.getType() === "artist"){
-                nodeArtists[node.getObject().artistId] = {dist: Number.POSITIVE_INFINITY, node: null, index: index};
-                cameFrom[index] = null;
-            }
+    currCameFromIndex++;
 
-            if(node.getType() === "label"){
-                nodeLabels[node.getObject()["Label ID"]] = {dist: Number.POSITIVE_INFINITY, node: null, index: index};
-                cameFrom[index] = null;
-            }
+    nodes[artist1.type][artist1.id] = {dist: 0, node: null, index: currCameFromIndex};
+    cameFrom[currCameFromIndex] = null;
+    currNode = new FibonacciHeapNode(nodes[artist1.type][artist1.id].dist, artist1);
+    nodes[artist1.type][artist1.id].node = currNode;
+    heap.insert(currNode);
 
-            if(node.getType() === "release"){
-                nodeReleases[node.getObject().releaseId] = {dist: Number.POSITIVE_INFINITY, node: null, index: index};
-                cameFrom[index] = null;
-            }
+    // console.log(Object.assign({}, heap.getRootList()));
 
-            if(node.getType() === "track"){
-                nodeTracks[node.getObject()["Track ID"]] = {dist: Number.POSITIVE_INFINITY, node: null, index: index};
-                cameFrom[index] = null;
-            }   
-        }
-
-        if(node.getType() === "artist"){
-            const currNode = new FibonacciHeapNode(nodeArtists[node.getObject().artistId].dist, node);
-            nodeArtists[node.getObject().artistId].node = currNode;
-            heap.insert(currNode);
-        }
-
-        if(node.getType() === "label"){
-            const currNode = new FibonacciHeapNode(nodeLabels[node.getObject()["Label ID"]].dist, node);
-            nodeLabels[node.getObject()["Label ID"]].node = currNode;
-            heap.insert(currNode);
-        }
-
-        if(node.getType() === "release"){
-            const currNode = new FibonacciHeapNode(nodeReleases[node.getObject().releaseId].dist, node);
-            nodeReleases[node.getObject().releaseId].node = currNode;
-            heap.insert(currNode);
-        }
-
-        if(node.getType() === "track"){
-            const currNode = new FibonacciHeapNode(nodeTracks[node.getObject()["Track ID"]].dist, node);
-            nodeTracks[node.getObject()["Track ID"]].node = currNode;
-            heap.insert(currNode);
-        }
-
-        return;
-    })
-
-    console.log(heap.getRootList());
     let count = 0;
     while(heap.getRootList().length > 0){
         const current = heap.peek();
 
+        // console.log(current.getPoint())
+        // console.log(Object.assign({}, heap.getRootList()));
+
         heap.extractMin();
 
-        count++;
-
-        if(current.getPoint().getObject().artistId === artistId2){
+        if(current.getPoint().id === artist2.id){
             console.log(current);
             console.log(cameFrom);
             
             const path = [current.getPoint()];
 
-            console.log(current.getPoint());
+            console.log(current.getPoint(), nodes[current.getPoint().type][current.getPoint().id].index);
             
-            let prev;
+            let prev = cameFrom[nodes[current.getPoint().type][current.getPoint().id].index]
 
-            if(current.getPoint().getType() === "artist"){
-                prev = cameFrom[nodeArtists[current.getPoint().getObject().artistId].index];
+            if(!prev){
+                console.log("NO RELATION FOUND");
 
-                if(!prev){
-                    console.log("NO RELATION FOUND");
-
-                    return ["NO RELATION FOUND"];
-                }
-            }
-
-            if(current.getPoint().getType() === "label"){
-                prev = cameFrom[nodeLabels[current.getPoint().getObject()["Label ID"]].index];
-
-                if(!prev){
-                    console.log("NO RELATION FOUND");
-
-                    return ["NO RELATION FOUND"];
-                }
-            }
-
-            if(current.getPoint().getType() === "release"){
-                prev = cameFrom[nodeReleases[current.getPoint().getObject().releaseId].index];
-
-                if(!prev){
-                    console.log("NO RELATION FOUND");
-
-                    return ["NO RELATION FOUND"];
-                }
-            }
-
-            if(current.getPoint().getType() === "track"){
-                prev = cameFrom[nodeTracks[current.getPoint().getObject()["Track ID"]].index];
-
-                if(!prev){
-                    console.log("NO RELATION FOUND");
-
-                    return ["NO RELATION FOUND"];
-                }
+                return ["NO RELATION FOUND"];
             }
 
             while(prev){
@@ -132,138 +106,51 @@ function Dijkstra(artistId1, artistId2, nodes){
             return path;
         }
 
-        const neighbors = current.getPoint().getNeighbors();
+        try {
+            let neighbors;
 
-        neighbors.forEach((neighbor) => {
-            let currentDist;
-
-            if(current.getPoint().getType() === "artist"){
-                currentDist = nodeArtists[current.getPoint().getObject().artistId].dist + 1;
+            if(current.getPoint().id === artist1.id){
+                neighbors = await getNeighbors(current, nodes, true);
+            }else{
+                neighbors = await getNeighbors(current, nodes, false);
             }
+            
+            // console.log(neighbors);
+            neighbors.forEach((neighbor) => {
+                const currentDist = nodes[current.getPoint().type][current.getPoint().id].dist + 1;
+                // console.log(currentDist);
+                // if(nodes[neighbor.type]){
+                //     console.log("does neighbor exist", nodes[neighbor.type][neighbor.id])
+                // }
 
-            if(current.getPoint().getType() === "label"){
-                currentDist = nodeLabels[current.getPoint().getObject()["Label ID"]].dist + 1;
-            }
+                if(!nodes[neighbor.type][neighbor.id]){
+                    currCameFromIndex++;
 
-            if(current.getPoint().getType() === "release"){
-                currentDist = nodeReleases[current.getPoint().getObject().releaseId].dist + 1;
-            }
+                    nodes[neighbor.type][neighbor.id] = {dist: currentDist, node: null, index: currCameFromIndex};
+                    cameFrom[currCameFromIndex] = [current.getPoint(), nodes[current.getPoint().type][current.getPoint().id].index];
+                    currNode = new FibonacciHeapNode(nodes[neighbor.type][neighbor.id].dist, neighbor);
+                    nodes[neighbor.type][neighbor.id].node = currNode;
+                    heap.insert(currNode);
 
-            if(current.getPoint().getType() === "track"){
-                currentDist = nodeTracks[current.getPoint().getObject()["Track ID"]].dist + 1;
-            } 
-
-            if(neighbor.getType() === "artist"){
-                neighbor = nodeArtists[neighbor.getObject().artistId].node;
-
-                if(currentDist < nodeArtists[neighbor.getPoint().getObject().artistId].dist){
-                    nodeArtists[neighbor.getPoint().getObject().artistId].dist = currentDist;
-
-                    if(current.getPoint().getType() === "artist"){
-                        cameFrom[nodeArtists[neighbor.getPoint().getObject().artistId].index] = [current.getPoint(), nodeArtists[current.getPoint().getObject().artistId].index];
-                    }
-        
-                    if(current.getPoint().getType() === "label"){
-                        cameFrom[nodeArtists[neighbor.getPoint().getObject().artistId].index] = [current.getPoint(), nodeLabels[current.getPoint().getObject()["Label ID"]].index];
-                    }
-        
-                    if(current.getPoint().getType() === "release"){
-                        cameFrom[nodeArtists[neighbor.getPoint().getObject().artistId].index] = [current.getPoint(), nodeReleases[current.getPoint().getObject().releaseId].index];
-                    }
-        
-                    if(current.getPoint().getType() === "track"){
-                        cameFrom[nodeArtists[neighbor.getPoint().getObject().artistId].index] = [current.getPoint(), nodeTracks[current.getPoint().getObject()["Track ID"]].index];
-                    }
-
-                    heap.decreaseKey(neighbor, nodeArtists[neighbor.getPoint().getObject().artistId].dist);
+                    return;
                 }
 
-                return;
-            }
+                // console.log("This node already existed")
 
-            if(neighbor.getType() === "label"){
-                neighbor = nodeLabels[neighbor.getObject()["Label ID"]].node;
-
-                if(currentDist < nodeLabels[neighbor.getPoint().getObject()["Label ID"]].dist){
-                    nodeLabels[neighbor.getPoint().getObject()["Label ID"]].dist = currentDist;
+                neighbor = nodes[neighbor.type][neighbor.id].node;
                     
-                    if(current.getPoint().getType() === "artist"){
-                        cameFrom[nodeLabels[neighbor.getPoint().getObject()["Label ID"]].index] = [current.getPoint(), nodeArtists[current.getPoint().getObject().artistId].index];
-                    }
-        
-                    if(current.getPoint().getType() === "label"){
-                        cameFrom[nodeLabels[neighbor.getPoint().getObject()["Label ID"]].index] = [current.getPoint(), nodeLabels[current.getPoint().getObject()["Label ID"]].index];
-                    }
-        
-                    if(current.getPoint().getType() === "release"){
-                        cameFrom[nodeLabels[neighbor.getPoint().getObject()["Label ID"]].index] = [current.getPoint(), nodeReleases[current.getPoint().getObject().releaseId].index];
-                    }
-        
-                    if(current.getPoint().getType() === "track"){
-                        cameFrom[nodeLabels[neighbor.getPoint().getObject()["Label ID"]].index] = [current.getPoint(), nodeTracks[current.getPoint().getObject()["Track ID"]].index];
-                    }
-
-                    heap.decreaseKey(neighbor, nodeLabels[neighbor.getPoint().getObject()["Label ID"]].dist);
+                if(currentDist < nodes[neighbor.getPoint().type][neighbor.getPoint().id].dist){
+                    nodes[neighbor.getPoint().type][neighbor.getPoint().id].dist = currentDist;
+                    cameFrom[nodes[neighbor.getPoint().type][neighbor.getPoint().id].index] = [current.getPoint(), nodes[current.getPoint().type][current.getPoint().id].index];
+                    heap.decreaseKey(neighbor, nodes[neighbor.getPoint().type][neighbor.getPoint().id].dist);
                 }
 
                 return;
-            }
 
-            if(neighbor.getType() === "release"){
-                neighbor = nodeReleases[neighbor.getObject().releaseId].node;
-
-                if(currentDist < nodeReleases[neighbor.getPoint().getObject().releaseId].dist){
-                    nodeReleases[neighbor.getPoint().getObject().releaseId].dist = currentDist;
-                    
-                    if(current.getPoint().getType() === "artist"){
-                        cameFrom[nodeReleases[neighbor.getPoint().getObject().releaseId].index] = [current.getPoint(), nodeArtists[current.getPoint().getObject().artistId].index];
-                    }
-        
-                    if(current.getPoint().getType() === "label"){
-                        cameFrom[nodeReleases[neighbor.getPoint().getObject().releaseId].index] = [current.getPoint(), nodeLabels[current.getPoint().getObject()["Label ID"]].index];
-                    }
-        
-                    if(current.getPoint().getType() === "release"){
-                        cameFrom[nodeReleases[neighbor.getPoint().getObject().releaseId].index] = [current.getPoint(), nodeReleases[current.getPoint().getObject().releaseId].index];
-                    }
-        
-                    if(current.getPoint().getType() === "track"){
-                        cameFrom[nodeReleases[neighbor.getPoint().getObject().releaseId].index] = [current.getPoint(), nodeTracks[current.getPoint().getObject()["Track ID"]].index];
-                    }
-
-                    heap.decreaseKey(neighbor, nodeReleases[neighbor.getPoint().getObject().releaseId].dist);
-                }
-
-                return;
-            }
-
-            if(neighbor.getType() === "track"){
-                neighbor = nodeTracks[neighbor.getObject()["Track ID"]].node;
-
-                if(currentDist < nodeTracks[neighbor.getPoint().getObject()["Track ID"]].dist){
-                    nodeTracks[neighbor.getPoint().getObject()["Track ID"]].dist = currentDist;
-                    
-                    if(current.getPoint().getType() === "artist"){
-                        cameFrom[nodeTracks[neighbor.getPoint().getObject()["Track ID"]].index] = [current.getPoint(), nodeArtists[current.getPoint().getObject().artistId].index];
-                    }
-        
-                    if(current.getPoint().getType() === "label"){
-                        cameFrom[nodeTracks[neighbor.getPoint().getObject()["Track ID"]].index] = [current.getPoint(), nodeLabels[current.getPoint().getObject()["Label ID"]].index];
-                    }
-        
-                    if(current.getPoint().getType() === "release"){
-                        cameFrom[nodeTracks[neighbor.getPoint().getObject()["Track ID"]].index] = [current.getPoint(), nodeReleases[current.getPoint().getObject().releaseId].index];
-                    }
-        
-                    if(current.getPoint().getType() === "track"){
-                        cameFrom[nodeTracks[neighbor.getPoint().getObject()["Track ID"]].index] = [current.getPoint(), nodeTracks[current.getPoint().getObject()["Track ID"]].index];
-                    }
-
-                    heap.decreaseKey(neighbor, nodeTracks[neighbor.getPoint().getObject()["Track ID"]].dist);
-                }
-
-                return;
-            }
-        })
+                
+            })
+        } catch (error) {
+            console.log(error);
+        }
     }
 }
