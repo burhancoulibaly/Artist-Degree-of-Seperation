@@ -140,7 +140,9 @@ async function search(e){
 
     console.log(artist1, artist2);
 
+    console.time("Getting artist data");
     const data = await getArtistsData([artist1, artist2]);
+    console.timeEnd("Getting artist data");
 
     console.log(data);
 
@@ -403,7 +405,9 @@ async function search(e){
     //     }
     // }))
 
+    console.time("Running Dijkstra Algorithm");
     const path = Dijkstra(artist1, artist2, nodes);
+    console.timeEnd("Running Dijkstra Algorithm");
 
     let resultNodesDiv = document.createElement("DIV")
     resultNodesDiv.setAttribute("class", "result-nodes");
