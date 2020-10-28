@@ -1350,15 +1350,7 @@ const getLabelRelationships = (labelId) => {
     const client = await pool.connect();
     const getLabelRelationships = `
       SELECT * FROM (
-        SELECT DISTINCT l_label_label.id, l_label_label.link, l_label_label.entity0, l_label_label.entity1, link_type.name, link_type.description,
-        (
-          SELECT DISTINCT label.name AS "label1" FROM label
-          WHERE l_label_label.entity0 = label.id
-        ) AS "label1",
-        (
-          SELECT DISTINCT label.name AS "label2" FROM label
-          WHERE l_label_label.entity1 = label.id
-        ) AS "label2"
+        SELECT DISTINCT l_label_label.id, l_label_label.link, l_label_label.entity0, l_label_label.entity1, link_type.name, link_type.description
         FROM l_label_label
         LEFT JOIN link
         ON link.id = l_label_label.link
@@ -1409,15 +1401,7 @@ const getRecordingRelationship = (track) => {
     const client = await pool.connect();
     const getRecordingRelationship = `
       SELECT * FROM (
-        SELECT DISTINCT l_recording_recording.id, l_recording_recording.link, l_recording_recording.entity0, l_recording_recording.entity1, link_type.name, link_type.description,
-        (
-          SELECT DISTINCT recording.name AS "recording1" FROM recording
-          WHERE l_recording_recording.entity0 = recording.id
-        ) AS "recording1",
-        (
-          SELECT DISTINCT recording.name AS "recording2" FROM recording
-          WHERE l_recording_recording.entity1 = recording.id
-        ) AS "recording2"
+        SELECT DISTINCT l_recording_recording.id, l_recording_recording.link, l_recording_recording.entity0, l_recording_recording.entity1, link_type.name, link_type.description
         FROM l_recording_recording
         LEFT JOIN link
         ON link.id = l_recording_recording.link
