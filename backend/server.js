@@ -403,11 +403,17 @@ app.post('/getArtistsData', async function(req,res){
 
     console.time("labels");
     await Promise.all(Object.entries(releasesObject).map(async([key, { id }]) => {
-      const results = await getReleaseLabelInfo(val.releaseId);
+      const results = await getReleaseLabelInfo(id);
 
       await Promise.all(results.map((label) => {
         if(!labelsObject[label["Label ID"]]){
-          labelsObject[label["Label ID"]] = label;
+          labelsObject[label["Label ID"]] = {
+            id: label["Label ID"],
+            name: label["Label Name"],
+            code: label["Label Code"],
+            labelType: label["Label Type"],
+            type: "label"
+          }
           
           return;
         }
@@ -420,8 +426,8 @@ app.post('/getArtistsData', async function(req,res){
     console.timeEnd("labels");
     
     console.time("labelRelationships");
-    await Promise.all(Object.entries(labelsObject).map(async([key, val]) => {
-      const results = await getLabelRelationships(val["Label ID"]);
+    await Promise.all(Object.entries(labelsObject).map(async([key, { id }]) => {
+      const results = await getLabelRelationships(id);
 
       await Promise.all(results.map((result) => {
         if(!labelRelationshipsObject[result.id]){
@@ -432,10 +438,10 @@ app.post('/getArtistsData', async function(req,res){
       return;
     }));
     console.timeEnd("labelRelationships");
-
+    
     console.time("recording relationship");
-    await Promise.all(Object.entries(tracksObject).map(async([key, val]) => {
-      const results = await getRecordingRelationship(val)
+    await Promise.all(Object.entries(tracksObject).map(async([key, track]) => {
+      const results = await getRecordingRelationship(track)
 
       await Promise.all(results.map((result) => {
         if(!recordingRelationshipsObject[result.id]){
@@ -446,21 +452,22 @@ app.post('/getArtistsData', async function(req,res){
       return;
     }));
     console.timeEnd("recording relationship");
-    
+
     console.time("tracks");
     await Promise.all(Object.entries(recordingRelationshipsObject).map(async([key, { entityNum, entity0, entity1}]) => {
+      console.log(entity0);
       if(entityNum === 0){
         const results = await getArtistTracksFromRecording(entity0);
 
         await Promise.all(results.map((track) => {
           if(!tracksObject[track["Track ID"]]){
             tracksObject[track["Track ID"]] = {
-              "Track ID": track["Track ID"],
-              "Track Name": track["Track Name"],
-              "Release Credit": track["Release Credit"],
-              "Release ID": track["Release ID"],
-              "Credit ID": track["Credit ID"],
-              "Recording ID": track["Recording ID"]
+              id: track["Track ID"],
+              trackName: track["Track Name"],
+              releaseCredit: track["Release Credit"],
+              releaseId: track["Release ID"],
+              creditId: track["Credit ID"],
+              recordingId: track["Recording ID"]
             };
     
             return;
@@ -478,12 +485,12 @@ app.post('/getArtistsData', async function(req,res){
         await Promise.all(results.map((track) => {
           if(!tracksObject[track["Track ID"]]){
             tracksObject[track["Track ID"]] = {
-              "Track ID": track["Track ID"],
-              "Track Name": track["Track Name"],
-              "Release Credit": track["Release Credit"],
-              "Release ID": track["Release ID"],
-              "Credit ID": track["Credit ID"],
-              "Recording ID": track["Recording ID"]
+              id: track["Track ID"],
+              trackName: track["Track Name"],
+              releaseCredit: track["Release Credit"],
+              releaseId: track["Release ID"],
+              creditId: track["Credit ID"],
+              recordingId: track["Recording ID"]
             };
     
             return;
@@ -501,9 +508,9 @@ app.post('/getArtistsData', async function(req,res){
   
     
     console.time("artist_credit_name");
-    await Promise.all(Object.entries(tracksObject).map(async([key, val]) => {
-      if(!artistCreditNameObject[val["Credit ID"]]){
-        const results = await getArtistCreditName(val["Credit ID"])
+    await Promise.all(Object.entries(tracksObject).map(async([key, { id }]) => {
+      if(!artistCreditNameObject[id]){
+        const results = await getArtistCreditName(id)
 
         await Promise.all(results.map((credit) => {
           if(!artistCreditNameObject[credit["Credit ID"]]){
@@ -543,7 +550,7 @@ app.post('/getArtistsData', async function(req,res){
         await Promise.all(results.map((artistInfo) => {
           if(!artistsObject[artistInfo["Artist ID"]]){
             artistsObject[artistInfo["Artist ID"]] = {
-              artistId: artistInfo["Artist ID"],
+              id: artistInfo["Artist ID"],
               stageName: artistInfo["Stage Name"],
               origin: artistInfo["Origin"],
               type: artistInfo["Type"],
@@ -564,9 +571,9 @@ app.post('/getArtistsData', async function(req,res){
     console.timeEnd("Feature artistsInfo");
     
     console.time("artistRelationships");
-    await Promise.all(Object.entries(artistsObject).map(async([key, val]) => {
+    await Promise.all(Object.entries(artistsObject).map(async([key, { id }]) => {
       // if(artistInfo["Artist ID"] !== artists[0] && artistInfo["Artist ID"] !== artists[1]){
-        const results = await getArtistRelationships(val.artistId)
+        const results = await getArtistRelationships(id)
 
         await Promise.all(results.map((result) => {
           if(!artistRelationshipsObject[result.id]){
@@ -582,9 +589,9 @@ app.post('/getArtistsData', async function(req,res){
     console.timeEnd("artistRelationships")
 
     console.time("artistLabelRelationships");
-    await Promise.all(Object.entries(artistsObject).map(async([key, val]) => {
+    await Promise.all(Object.entries(artistsObject).map(async([key,{ id }]) => {
       // if(artistInfo["Artist ID"] !== artists[0] && artistInfo["Artist ID"] !== artists[1]){
-        const results = await getArtistLabelRelationships(val.artistId)
+        const results = await getArtistLabelRelationships(id)
 
         await Promise.all(results.map((result) => {
           if(!artistLabelRelationshipsObject[result.id]){
@@ -600,8 +607,8 @@ app.post('/getArtistsData', async function(req,res){
     console.timeEnd("artistLabelRelationships")
     
     console.time("artistAlias");
-    await Promise.all(Object.entries(artistsObject).map(async([key, val]) => {
-      const results = await getArtistAlias(val.artistId)
+    await Promise.all(Object.entries(artistsObject).map(async([key, { id }]) => {
+      const results = await getArtistAlias(id)
 
       await Promise.all(results.map((alias) => {
         if(!artistAliasObject[alias["Artist ID"]]){
@@ -623,7 +630,7 @@ app.post('/getArtistsData', async function(req,res){
         await Promise.all(results.map((artistInfo) => {
           if(!artistsObject[artistInfo["Artist ID"]]){
             artistsObject[artistInfo["Artist ID"]] = {
-              artistId: artistInfo["Artist ID"],
+              id: artistInfo["Artist ID"],
               stageName: artistInfo["Stage Name"],
               origin: artistInfo["Origin"],
               type: artistInfo["Type"],
@@ -645,7 +652,7 @@ app.post('/getArtistsData', async function(req,res){
         await Promise.all(results.map((artistInfo) => {
           if(!artistsObject[artistInfo["Artist ID"]]){
             artistsObject[artistInfo["Artist ID"]] = {
-              artistId: artistInfo["Artist ID"],
+              id: artistInfo["Artist ID"],
               stageName: artistInfo["Stage Name"],
               origin: artistInfo["Origin"],
               type: artistInfo["Type"],
@@ -666,14 +673,14 @@ app.post('/getArtistsData', async function(req,res){
     console.timeEnd("artistInfo");
     
     console.time("release");
-    await Promise.all(Object.entries(tracksObject).map(async([key, val]) => {
-      if(!releasesObject[val["Release ID"]]){
-        const results = await getReleasesById(val["Release ID"])
+    await Promise.all(Object.entries(tracksObject).map(async([key, { id }]) => {
+      if(!releasesObject[id]){
+        const results = await getReleasesById(id)
 
         await Promise.all(results.map((release) => {
           if(!releasesObject[release["Release ID"]]){
             releasesObject[release["Release ID"]] = {
-              releaseId: release["Release ID"],
+              id: release["Release ID"],
               release: release["Release"],
               type: release["Type"],
               releaseCredit: release["Release Credit"],
@@ -699,7 +706,13 @@ app.post('/getArtistsData', async function(req,res){
 
         await Promise.all(results.map((label) => {
           if(!labelsObject[label["Label ID"]]){
-            labelsObject[label["Label ID"]] = label;
+            labelsObject[label["Label ID"]] = {
+              id: label["Label ID"],
+              name: label["Label Name"],
+              code: label["Label Code"],
+              labelType: label["Label Type"],
+              type: "label"
+            };
             
             return;
           }
@@ -719,7 +732,13 @@ app.post('/getArtistsData', async function(req,res){
 
         await Promise.all(results.map((label) => {
           if(!labelsObject[label["Label ID"]]){
-            labelsObject[label["Label ID"]] = label;
+            labelsObject[label["Label ID"]] = {
+              id: label["Label ID"],
+              name: label["Label Name"],
+              code: label["Label Code"],
+              labelType: label["Label Type"],
+              type: "label"
+            };
             
             return;
           }
@@ -733,7 +752,13 @@ app.post('/getArtistsData', async function(req,res){
 
         await Promise.all(results.map((label) => {
           if(!labelsObject[label["Label ID"]]){
-            labelsObject[label["Label ID"]] = label;
+            labelsObject[label["Label ID"]] = {
+              id: label["Label ID"],
+              name: label["Label Name"],
+              code: label["Label Code"],
+              labelType: label["Label Type"],
+              type: "label"
+            };
             
             return;
           }
@@ -1407,8 +1432,8 @@ const getRecordingRelationship = (track) => {
         ON link.id = l_recording_recording.link
         LEFT JOIN link_type
         ON link_type.id = link.link_type
-        WHERE l_recording_recording.entity0 = ${track["Recording ID"]}
-        OR l_recording_recording.entity1 = ${track["Recording ID"]}
+        WHERE l_recording_recording.entity0 = ${track.id}
+        OR l_recording_recording.entity1 = ${track.id}
         AND l_recording_recording.entity0 != l_recording_recording.entity1
       ) AS "recording_rel"
       WHERE recording_rel.name = 'samples material';

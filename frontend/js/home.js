@@ -82,7 +82,17 @@ const destroySuggestionList = (autoSelect, inputEl) => {
 }
 
 async function search(e){
-    const nodes = new Array();
+    const nodes = {
+        artist: new Array(),
+        release: new Array(),
+        track: new Array(),
+        label: new Array()
+    }
+
+    let releaseNodes = new Array();
+    let trackNodes = new Array();
+    let artistNodes = new Array();
+    let labelNodes = new Array();
 
     e.preventDefault();
 
@@ -147,83 +157,85 @@ async function search(e){
     console.log(data);
 
     Object.values(data.artists).forEach((value) => {
-        nodes.push(new Node(value, "artist"));
-    });
-
-    Object.values(data.labels).forEach((value) => {
-        nodes.push(new Node(value, "label"));
+        nodes["artist"].push(new Node(value, "artist"));
     });
 
     Object.values(data.releases).forEach((value) => {
-        nodes.push(new Node(value, "release"));
+        nodes["release"].push(new Node(value, "release"));
     });
 
     Object.values(data.tracks).forEach((value) => {
-        nodes.push(new Node(value, "track"));
+        nodes["track"].push(new Node(value, "track"));
+    });
+
+    Object.values(data.labels).forEach((value) => {
+        nodes["label"].push(new Node(value, "label"));
     });
 
     Object.values(data.artistCreditName).forEach((value) => {
-        let releaseNodes = new Array();
-        let trackNodes = new Array();
-        let artistNodes = new Array();
+        const releaseNodes = new Array();
+        const trackNodes = new Array();
+        const artistNodes = new Array();
 
-        nodes.forEach((node) => {
-            if(node.getType() === "release"){
-                if(value.creditId === node.getObject().creditId){
-                    releaseNodes.push(node);
-                }
-            }
-
-            if(node.getType() === "track"){
-                if(value.creditId === node.getObject()["Credit ID"]){
-                    trackNodes.push(node);
-                }
-            }
-
-            if(node.getType() === "artist"){
-                if(value.artists[node.getObject().artistId]){
-                    artistNodes.push(node);
-                }
+        nodes["release"].forEach((node) => {
+            if(value.creditId === node.getObject().creditId){
+                releaseNodes.push(node);
             }
 
             return;
         });
-        
+
+        nodes["track"].forEach((node) => {
+            if(value.creditId === node.getObject().creditId){
+                trackNodes.push(node);
+            }
+
+            return;
+        });
+
+        nodes["artist"].forEach((node) => {
+            if(value.artists[node.getObject().id]){
+                artistNodes.push(node);
+            }
+
+            return;
+        });
+
         releaseNodes.forEach((releaseNode) => {
             releaseNode.addNeighbors(artistNodes);
-
+    
             return;
         });
-
+    
         trackNodes.forEach((trackNode) => {
             trackNode.addNeighbors(artistNodes);
             
             return;
         });
-
+    
         artistNodes.forEach((artistsNode) => {
             artistsNode.addNeighbors(releaseNodes);
             artistsNode.addNeighbors(trackNodes);
-
+    
             return;
         });
     });
 
     Object.values(data.releaseLabel).forEach((value) => {
-        let releaseNodes = new Array();
-        let labelNodes = new Array();
-
-        nodes.forEach((node) => {
-            if(node.getType() === "release"){
-                if(value.releaseId === node.getObject().releaseId){
-                    releaseNodes.push(node);
-                }
+        const releaseNodes = new Array();
+        const labelNodes = new Array();
+    
+        nodes["release"].forEach((node) => {
+            if(value.releaseId === node.getObject().id){
+                releaseNodes.push(node);
             }
 
-            if(node.getType() === "label"){
-                if(value.labels[node.getObject()["Label ID"]] && node.getObject()["Label Name"] && !node.getObject()["Label Name"].includes("no label") && !node.getObject()["Label Name"].includes("No label") && !node.getObject()["Label Name"].includes("No Label") && !node.getObject()["Label Name"].includes("no Label")){
-                    labelNodes.push(node);
-                }
+            return;
+        });
+
+        nodes["label"].forEach((node) => {
+            if(value.labels[node.getObject().id] && node.getObject().name && !node.getObject().name.includes("no label") && !node.getObject().name.includes("No label") && !node.getObject().name.includes("No Label") && !node.getObject().name.includes("no Label")){
+                labelNodes.push(node);
             }
 
             return;
@@ -231,159 +243,137 @@ async function search(e){
 
         releaseNodes.forEach((releaseNode) => {
             releaseNode.addNeighbors(labelNodes);
-
+    
             return;
         });
-
+    
         labelNodes.forEach((labelNode) => {
             labelNode.addNeighbors(releaseNodes);
-
+    
             return;
         });
     });
 
     Object.values(data.artistRelationships).forEach((value) => {
-        let artist1 = new Array();
-        let artist2 = new Array();
+        const artist1Nodes = new Array();
+        const artist2Nodes = new Array();
 
-        nodes.forEach((node) => {
-            if(node.getType() === "artist"){
-                if(node.getObject().artistId === value.entity0){
-                    // console.log("artist match 1")
-                    artist1.push(node);
-                }
+        nodes["artist"].forEach((node) => {
+            if(node.getObject().id === value.entity0){
+                // console.log("artist match 1")
+                artist1Nodes.push(node);
+            }
 
-                if(node.getObject().artistId === value.entity1){
-                    // console.log("artist match 2")
-                    artist2.push(node);
-                }
+            if(node.getObject().id === value.entity1){
+                // console.log("artist match 2")
+                artist2Nodes.push(node);
             }
         })
 
-        if(artist1.length && artist2.length){
-            artist1.forEach((artist) => {
-                artist.addNeighbors(artist2);
-            })
-            
-            artist2.forEach((artist) => {
-                artist.addNeighbors(artist1);
-            })
-        }
+        artist1Nodes.forEach((artist) => {
+            artist.addNeighbors(artist2Nodes);
+        })
+        
+        artist2Nodes.forEach((artist) => {
+            artist.addNeighbors(artist1Nodes);
+        })
     })
 
     Object.values(data.recordingRelationships).forEach((value) => {
-        let track1 = new Array();
-        let track2 = new Array();
+        const track1 = new Array();
+        const track2 = new Array();
 
-        nodes.forEach((node) => {
-            if(node.getType() === "track"){
-                if(node.getObject()["Recording ID"] === value.entity0){
-                    // console.log("track match 1")
-                    track1.push(node);
-                }
+        nodes["track"].forEach((node) => {
+            if(node.getObject().recordingId === value.entity0){
+                // console.log("track match 1")
+                track1.push(node);
+            }
 
-                if(node.getObject()["Recording ID"] === value.entity1){
-                    // console.log("track match 2")
-                    track2.push(node);
-                }
+            if(node.getObject().recordingId === value.entity1){
+                // console.log("track match 2")
+                track2.push(node);
             }
         })
 
-        if(track1.length && track2.length){
-            track1.forEach((track) => {
-                track.addNeighbors(track2);
-            })
+        track1.forEach((track) => {
+            track.addNeighbors(track2);
+        })
 
-            track2.forEach((track) => {
-                track.addNeighbors(track1);
-            })
-        }
+        track2.forEach((track) => {
+            track.addNeighbors(track1);
+        })
     })
 
     Object.values(data.artistLabelRelationships).forEach((value) => {
-        let artists = new Array();
-        let labels = new Array();
+        const artists = new Array();
+        const labels = new Array();
 
-        nodes.forEach((node) => {
-            if(node.getType() === "artist"){
-                if(node.getObject().artistId === value.entity0){
-                    // console.log("artist match 1")
-                    artists.push(node);
-                }
+        nodes["artist"].forEach((node) => {
+            if(node.getObject().id === value.entity0){
+                // console.log("artist match 1")
+                artists.push(node);
             }
         })
 
-        nodes.forEach((node) => {
-            if(node.getType() === "label"){
-                if(node.getObject()["Label ID"] === value.entity1){
-                    // console.log("label match 1")
-                    labels.push(node);
-                }
+        nodes["label"].forEach((node) => {
+            if(node.getObject().id === value.entity1){
+                // console.log("label match 1")
+                labels.push(node);
             }
         })
 
-        if(artists.length && labels.length){
-            artists.forEach((artist) => {
-                artist.addNeighbors(labels);
-            })
-            
-            labels.forEach((label) => {
-                label.addNeighbors(artists);
-            })
-        }
+        artists.forEach((artist) => {
+            artist.addNeighbors(labels);
+        })
+        
+        labels.forEach((label) => {
+            label.addNeighbors(artists);
+        })
     })
 
     Object.values(data.labelRelationships).forEach((value) => {
-        let label1 = new Array();
-        let label2 = new Array();
+        const label1 = new Array();
+        const label2 = new Array();
 
-        nodes.forEach((node) => {
-            if(node.getType() === "label"){
-                if(node.getObject()["Label ID"] === value.entity0){
-                    // console.log("label match 1")
-                    label1.push(node);
-                }
+        nodes["label"].forEach((node) => {
+            if(node.getObject().id === value.entity0){
+                // console.log("label match 1")
+                label1.push(node);
+            }
 
-                if(node.getObject()["Label ID"] === value.entity1){
-                    // console.log("label match 2")
-                    label2.push(node);
-                }
+            if(node.getObject().id === value.entity1){
+                // console.log("label match 2")
+                label2.push(node);
             }
         })
 
-        if(label1.length && label2.length){
-            label1.forEach((label) => {
-                label.addNeighbors(label2);
-            })
-            
-            label1.forEach((label) => {
-                label.addNeighbors(label1);
-            })
-        }
+        label1.forEach((label) => {
+            label.addNeighbors(label2);
+        })
+        
+        label1.forEach((label) => {
+            label.addNeighbors(label1);
+        })
     })
 
-    let releaseNodes = new Array();
-    let trackNodes = new Array();
+    releaseNodes = new Array();
+    trackNodes = new Array();
 
-    Promise.all(nodes.map((node) => {
-        if(node.getType() === "release"){
-            releaseNodes.push(node);
+    Promise.all(nodes["release"].map((node) => {
+        releaseNodes.push(node);
 
-            return;
-        }
+        return;
+    }));
 
-        if(node.getType() === "track"){
-            trackNodes.push(node);
-
-            return;
-        }
+    Promise.all(nodes["track"].map((node) => {
+        trackNodes.push(node);
 
         return;
     }));
 
     releaseNodes.forEach((releaseNode) => {
         trackNodes.forEach((trackNode) => {
-            if(releaseNode.getObject().releaseId === trackNode.getObject()["Release ID"]){
+            if(releaseNode.getObject().id === trackNode.getObject().releaseId){
                 releaseNode.addNeighbor(trackNode);
                 trackNode.addNeighbor(releaseNode);
 
@@ -396,15 +386,14 @@ async function search(e){
 
     console.log(nodes);
 
-    // Promise.all(nodes.map((node) => {
-    //     if(node.getType() === "track"){
-    //         if(node.getNeighbors().length < 2){
-    //             console.log(node)
-    //             console.log("Soem ting wong")
-    //         } 
-    //     }
-    // }))
+    Promise.all(nodes["track"].map((node) => {
+        if(node.getNeighbors().length < 2){
+            console.log(node)
+            console.log("Soem ting wong")
+        } 
+    }))
 
+    return;
     console.time("Running Dijkstra Algorithm");
     const path = Dijkstra(artist1, artist2, nodes);
     console.timeEnd("Running Dijkstra Algorithm");
