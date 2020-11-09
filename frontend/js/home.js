@@ -386,12 +386,12 @@ async function search(e){
 
     console.log(nodes);
 
-    Promise.all(nodes["track"].map((node) => {
-        if(node.getNeighbors().length < 2){
-            console.log(node)
-            console.log("Soem ting wong")
-        } 
-    }))
+    // Promise.all(nodes["track"].map((node) => {
+    //     if(node.getNeighbors().length < 2){
+    //         console.log(node)
+    //         console.log("Soem ting wong")
+    //     } 
+    // }))
 
     return;
     console.time("Running Dijkstra Algorithm");
